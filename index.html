@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Income Calculator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-yIT8bX/IVBqIrbkFVqrArxvutMNhZl0z1HcT1xxF8l1ZSeSWBfJ/9Dx7Kjc4N+rOT+2dZacKgPezXFOeQb2dzA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .form-control {
+            border-radius: 5px;
+        }
+
+        .btn {
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: #0069d9;
+        }
+
+        .error-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #dc3545;
+            cursor: pointer;
+        }
+
+        /* Custom styling for the tooltip */
+        .tooltip-inner {
+            background-color: #dc3545;
+            /* Bootstrap danger color */
+        }
+
+        /* Custom styling for the tooltip arrow */
+        .tooltip.bs-tooltip-auto[x-placement^=right] .arrow::before {
+            border-right-color: #dc3545 !important;
+            /* Bootstrap danger color */
+        }
+
+        /* Custom styling for the result container */
+        #result-container {
+            background-color: white;
+            border-radius: 5px;
+            padding: 30px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: 50%;
+            height: 45%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #result-container p {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #result-container button {
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            outline: 0;
+            margin-top: 10%;
+        }
+
+        #result-container button:hover {
+            background-color: #0069d9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Income Calculator</h2>
+        <form id="income-form">
+            <div class="form-group">
+                <label for="gross-income">Gross Annual Income</label>
+                <input type="text" class="form-control" id="gross-income" placeholder="Enter gross annual income"
+                    required />
+                <i class="error-icon fas fa-exclamation-circle" data-toggle="tooltip" data-placement="right"
+                    title="Invalid input"></i>
+            </div>
+            <div class="form-group">
+                <label for="extra-income">Extra Income</label>
+                <input type="text" class="form-control" id="extra-income" placeholder="Enter extra income" />
+                <i class="error-icon fas fa-exclamation-circle" data-toggle="tooltip" data-placement="right"
+                    title="Invalid input"></i>
+            </div>
+            <div class="form-group">
+                <label for="age-group">Age Group</label>
+                <select class="form-control" id="age-group" required>
+                    <option value="">Select age group</option>
+                    <option value="under40">&lt;40</option>
+                    <option value="40to60">&ge;40 &lt;60</option>
+                    <option value="over60">&ge;60</option>
+                </select>
+                <i class="error-icon fas fa-exclamation-circle" data-toggle="tooltip" data-placement="right"
+                    title="Invalid input"></i>
+            </div>
+            <div class="form-group">
+                <label for="deductions">Total Applicable Deductions</label>
+                <input type="text" class="form-control" id="deductions" placeholder="Enter total applicable deductions"
+                    required />
+                <i class="error-icon fas fa-exclamation-circle" data-toggle="tooltip" data-placement="right"
+                    title="Invalid input"></i>
+            </div>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+    <!-- Result Container -->
+    <div id="result-container">
+        <p>Your overall income will be <br><span id="overall-income">0</span> <br>after tax deductions.</p>
+        <button id="close-btn">Close</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize Bootstrap tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $("#income-form").submit(function (e) {
+                e.preventDefault();
+                // Reset error icons and tooltips
+                $(".error-icon").show(); // Show error icons
+                $(".form-control").tooltip('hide');
+                // Validate inputs
+                var valid = true;
+                $(".form-control").each(function () {
+                    var input = $(this);
+                    if (!input.val()) {
+                        input.next(".error-icon").show();
+                        input.tooltip('show');
+                        valid = false;
+                    }
+                });
+                if (valid) {
+                    // Proceed with calculations and modal display
+                    calculateTax();
+                }
+            });
+
+            function calculateTax() {
+                // Your tax calculation logic goes here
+                // This function should calculate tax based on inputs
+                // and display the result in the modal
+                var grossIncome = parseFloat($("#gross-income").val());
+                var extraIncome = parseFloat($("#extra-income").val());
+                var ageGroup = $("#age-group").val();
+                var deductions = parseFloat($("#deductions").val());
+
+                var taxableIncome = grossIncome + extraIncome - deductions;
+                var tax = 0;
+
+                if (taxableIncome > 800000) {
+                    switch (ageGroup) {
+                        case "under40":
+                            tax = 0.3 * (taxableIncome - 800000);
+                            break;
+                        case "40to60":
+                            tax = 0.4 * (taxableIncome - 800000);
+                            break;
+                        case "over60":
+                            tax = 0.1 * (taxableIncome - 800000);
+                            break;
+                    }
+                }
+
+                // Calculate overall income after tax deductions
+                var overallIncome = taxableIncome - tax;
+
+                // Display result in the provided UI
+                $("#overall-income").text(overallIncome.toFixed(2));
+                $("#result-container").show();
+                $(".form-group").addClass('hidden'); // Hide the form controls
+                $(".btn").addClass('hidden'); // Hide the submit button
+            }
+
+            // Close button functionality
+            $("#close-btn").click(function () {
+                $("#result-container").hide();
+                $(".form-group").removeClass('hidden'); // Show the form controls again
+                $(".btn").removeClass('hidden'); // Show the submit button again
+            });
+        });
+    </script>
+</body>
+
+</html>
